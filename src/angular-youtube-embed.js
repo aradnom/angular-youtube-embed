@@ -30,6 +30,9 @@ angular.module('youtube-embed', ['ng']).run(function () {
         playerHeight: '390',
         playerWidth: '640',
 
+        // Any additional playerVars
+        playerVars: null,
+
         currentState: null,
 
         setURL: function (url) {
@@ -112,6 +115,7 @@ angular.module('youtube-embed', ['ng']).run(function () {
                 height: this.playerHeight,
                 width: this.playerWidth,
                 videoId: this.videoId,
+                playerVars: this.playerVars,
                 events: {
                     onReady: onPlayerReady,
                     onStateChange: onPlayerStateChange
@@ -174,7 +178,8 @@ angular.module('youtube-embed', ['ng']).run(function () {
         restrict: 'EA',
         scope: {
             videoId: '=',
-            videoUrl: '='
+            videoUrl: '=',
+            playerVars: '='
         },
         link: function (scope, element, attrs) {
             // Attach to element
@@ -204,6 +209,11 @@ angular.module('youtube-embed', ['ng']).run(function () {
                                 $youtube.videoId = id;
                                 $youtube.loadPlayer();
                             });
+                        }
+
+                        // Check for additional player vars
+                        if (typeof scope.playerVars !== 'undefined') {
+                            $youtube.playerVars = scope.playerVars;
                         }
                     }
             });
