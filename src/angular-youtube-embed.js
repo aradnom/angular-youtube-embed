@@ -95,7 +95,7 @@ angular.module('youtube-embed', ['ng']).run(function () {
         },
 
         createPlayer: function (playerId, videoId, playerVars) {
-            return new YT.Player(playerId, {
+            var player = new YT.Player(playerId, {
                 height: this.playerHeight,
                 width: this.playerWidth,
                 videoId: videoId,
@@ -105,14 +105,33 @@ angular.module('youtube-embed', ['ng']).run(function () {
                     onStateChange: onPlayerStateChange
                 }
             });
+
+            // Save reference to player in rootscope so we can easily close
+            // existing players before opening a new one
+            if (typeof($rootScope.yt_players) !== 'object') $rootScope.yt_players = [];
+
+            $rootScope.yt_players.push(player);
+
+            return player;
         },
 
         loadPlayer: function (scope, playerId, videoId, playerVars) {
             if (this.ready && playerId && videoId) {
+                // Stop any other existing YT players if they exist
+                if ($rootScope.yt_players && $rootScope.yt_players.length) {
+                    $rootScope.yt_players.forEach( function (player) {
+                        if (player.getIframe() && player.getPlayerState() === YT.PlayerState.PLAYING) {
+                            player.stopVideo();
+                        }
+                    });
+                }
+
+                // Kill any old players in this scope before making a new one
                 if (scope.player && typeof scope.player.destroy === 'function') {
                     scope.player.destroy();
                 }
 
+                // Create the new player
                 scope.player = this.createPlayer(playerId, videoId, playerVars);
             }
         }
@@ -167,8 +186,6 @@ angular.module('youtube-embed', ['ng']).run(function () {
         },
         link: function (scope, element, attrs) {
             // Attach to element
-            //$youtube.playerId = element[0].id;
-
             var stopWatchingReady = scope.$watch(
                 function () {
                     return $youtube.ready
